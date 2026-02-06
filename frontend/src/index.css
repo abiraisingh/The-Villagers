@@ -1,0 +1,215 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+@layer base {
+  :root {
+    /* Warm, earthy palette for village authenticity */
+    --background: 35 30% 97%;
+    --foreground: 25 25% 15%;
+
+    --card: 35 25% 95%;
+    --card-foreground: 25 25% 15%;
+
+    --popover: 35 30% 97%;
+    --popover-foreground: 25 25% 15%;
+
+    /* Terracotta - warm clay earth */
+    --primary: 18 65% 45%;
+    --primary-foreground: 35 30% 97%;
+
+    /* Sage green - nature, fields */
+    --secondary: 140 25% 35%;
+    --secondary-foreground: 35 30% 97%;
+
+    /* Warm muted tones */
+    --muted: 35 20% 90%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Golden accent - wheat, marigold */
+    --accent: 42 80% 55%;
+    --accent-foreground: 25 25% 15%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 35 30% 97%;
+
+    --border: 30 20% 85%;
+    --input: 30 20% 85%;
+    --ring: 18 65% 45%;
+
+    --radius: 0.75rem;
+
+    /* Custom village tokens */
+    --village-terracotta: 18 65% 45%;
+    --village-sage: 140 25% 35%;
+    --village-wheat: 42 80% 55%;
+    --village-cream: 35 30% 97%;
+    --village-earth: 25 25% 15%;
+    --village-stone: 30 15% 70%;
+    
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(18 65% 45%) 0%, hsl(25 55% 35%) 100%);
+    --gradient-nature: linear-gradient(135deg, hsl(140 25% 35%) 0%, hsl(140 30% 25%) 100%);
+    --gradient-sunset: linear-gradient(180deg, hsl(35 60% 85%) 0%, hsl(25 70% 70%) 50%, hsl(18 65% 45%) 100%);
+    
+    /* Shadows with warmth */
+    --shadow-soft: 0 4px 20px -4px hsl(25 25% 15% / 0.1);
+    --shadow-card: 0 8px 30px -8px hsl(25 25% 15% / 0.15);
+    --shadow-elevated: 0 20px 50px -15px hsl(25 25% 15% / 0.2);
+
+    --sidebar-background: 35 25% 95%;
+    --sidebar-foreground: 25 25% 15%;
+    --sidebar-primary: 18 65% 45%;
+    --sidebar-primary-foreground: 35 30% 97%;
+    --sidebar-accent: 140 25% 35%;
+    --sidebar-accent-foreground: 35 30% 97%;
+    --sidebar-border: 30 20% 85%;
+    --sidebar-ring: 18 65% 45%;
+  }
+
+  .dark {
+    --background: 25 20% 10%;
+    --foreground: 35 25% 92%;
+
+    --card: 25 18% 14%;
+    --card-foreground: 35 25% 92%;
+
+    --popover: 25 20% 10%;
+    --popover-foreground: 35 25% 92%;
+
+    --primary: 18 55% 55%;
+    --primary-foreground: 25 20% 10%;
+
+    --secondary: 140 20% 45%;
+    --secondary-foreground: 25 20% 10%;
+
+    --muted: 25 15% 20%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 42 70% 50%;
+    --accent-foreground: 25 20% 10%;
+
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 35 25% 92%;
+
+    --border: 25 15% 22%;
+    --input: 25 15% 22%;
+    --ring: 18 55% 55%;
+
+    --sidebar-background: 25 18% 12%;
+    --sidebar-foreground: 35 25% 92%;
+    --sidebar-primary: 18 55% 55%;
+    --sidebar-primary-foreground: 25 20% 10%;
+    --sidebar-accent: 140 20% 45%;
+    --sidebar-accent-foreground: 25 20% 10%;
+    --sidebar-border: 25 15% 22%;
+    --sidebar-ring: 18 55% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .village-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .village-card {
+    @apply bg-card rounded-xl p-6 transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+
+  .village-card:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-2px);
+  }
+
+  .text-gradient-hero {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .bg-gradient-nature {
+    background: var(--gradient-nature);
+  }
+
+  .bg-gradient-sunset {
+    background: var(--gradient-sunset);
+  }
+
+  /* Subtle grain texture overlay */
+  .texture-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+}

@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pincode {
+  id        String    @id @default(uuid())
+  code      String    @unique
+  state     String
+  district  String
+  villages  Village[]
+  createdAt DateTime  @default(now())
+}
+
+model Village {
+  id        String   @id @default(uuid())
+  name      String
+  pincodeId String
+  pincode   Pincode  @relation(fields: [pincodeId], references: [id])
+  stories   Story[]
+  users     User[] // 👈 added
+  approved  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([name, pincodeId])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  villageId String?
+  village   Village? @relation(fields: [villageId], references: [id])
+  stories   Story[] // 👈 added
+  createdAt DateTime @default(now())
+}
+
+model Story {
+  id           String   @id @default(uuid())
+  title        String
+  originalText String
+  originalLang String
+  authorId     String
+  villageId    String
+  author       User     @relation(fields: [authorId], references: [id])
+  village      Village  @relation(fields: [villageId], references: [id])
+  createdAt    DateTime @default(now())
+}
