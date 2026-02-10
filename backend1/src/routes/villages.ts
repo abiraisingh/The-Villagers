@@ -20,26 +20,26 @@ router.get("/:id", async (req, res) => {
           orderBy: { createdAt: "desc" },
           include: {
             author: {
-              select: { email: true }
-            }
-          }
+              select: { email: true },
+            },
+          },
         },
 
         photos: {
           where: { approved: true },
-          orderBy: { createdAt: "desc" }
+          orderBy: { createdAt: "desc" },
         },
 
         foods: {
           where: { approved: true },
-          orderBy: { createdAt: "desc" }
+          orderBy: { createdAt: "desc" },
         },
 
         specialties: {
           where: { approved: true },
-          orderBy: { createdAt: "desc" }
-        }
-      }
+          orderBy: { createdAt: "desc" },
+        },
+      },
     });
 
     if (!village) {
@@ -53,34 +53,34 @@ router.get("/:id", async (req, res) => {
       district: village.pincode.district,
       state: village.pincode.state,
 
-      stories: village.stories.map(s => ({
+      stories: village.stories.map((s) => ({
         id: s.id,
         title: s.title,
         text: s.originalText,
         createdAt: s.createdAt,
-        author: s.author?.email || "Unknown"
+        author: s.author?.email || "Unknown",
       })),
 
-      photos: village.photos.map(p => ({
+      photos: village.photos.map((p) => ({
         id: p.id,
-        url: p.url,
-        caption: p.caption
+        url: p.imageUrl,
+        caption: p.description,
       })),
 
-      foods: village.foods.map(f => ({
+      foods: village.foods.map((f) => ({
         id: f.id,
         name: f.name,
         description: f.description,
-        imageUrl: f.imageUrl
+        imageUrl: f.imageUrl,
       })),
 
-      specialties: village.specialties.map(s => ({
+      specialties: village.specialties.map((s) => ({
         id: s.id,
         title: s.title,
         description: s.description,
         category: s.category,
-        imageUrl: s.imageUrl
-      }))
+        imageUrl: s.imageUrl,
+      })),
     });
   } catch (err) {
     console.error("VILLAGE FETCH ERROR:", err);
