@@ -1,11 +1,11 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import prisma from "../prisma";
 import { Prisma } from "@prisma/client";
 
 const router = Router();
 
 /* ---------------- GET SPECIALTIES ---------------- */
-router.get("/", async (_, res) => {
+router.get("/", async (_: Request, res: Response) => {
   try {
     const specialties = await prisma.specialty.findMany({
       where: { approved: true },

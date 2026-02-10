@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
 
-router.get("/:code", async (req, res) => {
+router.get("/:code", async (req: Request, res: Response) => {
   const { code } = req.params;
 
   if (!/^\d{6}$/.test(code)) {

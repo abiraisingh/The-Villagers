@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -7,8 +7,8 @@ const router = Router();
    GET FULL VILLAGE DATA
    /api/villages/:id
 ---------------------------------------------------*/
-router.get("/:id", async (req, res) => {
-  const { id } = req.params;
+router.get("/:id", async (_: Request, res: Response) => {
+  const { id } = _.params;
 
   try {
     const village = await prisma.village.findUnique({

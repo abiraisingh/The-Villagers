@@ -1,13 +1,13 @@
-import { Router } from "express";
 import prisma from "../prisma";
 import multer from "multer";
 import { Prisma } from "@prisma/client";
+import { Request, Response, Router } from "express";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 /* ---------------- GET FOODS ---------------- */
-router.get("/", async (_, res) => {
+router.get("/", async (_: Request, res: Response) => {
   try {
     const foods = await prisma.food.findMany({
       where: { approved: true },

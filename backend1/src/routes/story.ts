@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import prisma from "../prisma";
 
 const router = Router();
@@ -6,7 +6,7 @@ const router = Router();
 /* =================================================
    GET ALL STORIES
 ================================================= */
-router.get("/", async (_, res) => {
+router.get("/", async (_: Request, res: Response) => {
   try {
     const stories = await prisma.story.findMany({
       include: {

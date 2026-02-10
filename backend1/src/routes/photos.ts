@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import prisma from "../prisma";
 import multer from "multer";
 
@@ -6,7 +6,7 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 /* ---------------- GET PHOTOS ---------------- */
-router.get("/", async (_, res) => {
+router.get("/", async (_: Request, res: Response) => {
   try {
     const photos = await prisma.photo.findMany({
       where: { approved: true },
