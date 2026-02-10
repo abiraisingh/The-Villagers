@@ -59,10 +59,12 @@ export function Header() {
 
           {/* CTA Button */}
           <div className="hidden lg:flex lg:items-center lg:gap-4">
-            <Button variant="hero" size="default">
-              <MapPin className="w-4 h-4" />
-              Find Your Village
-            </Button>
+            <Link to="/stories">
+  <Button variant="hero" size="default">
+    <MapPin className="w-4 h-4" />
+    Find Your Village
+  </Button>
+</Link>
           </div>
 
           {/* Mobile menu button */}

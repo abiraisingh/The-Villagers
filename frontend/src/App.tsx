@@ -7,8 +7,14 @@ import Index from "./pages/Index";
 import Stories from "./pages/Stories";
 import Photos from "./pages/Photos";
 import Food from "./pages/Food";
+import AddFood from "./pages/AddFood";
 import Specialties from "./pages/Specialties";
 import NotFound from "./pages/NotFound";
+import { Header } from "./components/layout/Header";
+import AddSpecialty from "./pages/AddSpecialty";
+import VillageDetails from "./pages/VillageDetails";
+import ExploreVillage from "./pages/ExploreVillage";
+
 
 const queryClient = new QueryClient();
 
@@ -23,7 +29,12 @@ const App = () => (
           <Route path="/stories" element={<Stories />} />
           <Route path="/photos" element={<Photos />} />
           <Route path="/food" element={<Food />} />
+          <Route path="/food/add" element={<AddFood />} />
           <Route path="/specialties" element={<Specialties />} />
+          <Route path="/specialties/add" element={<AddSpecialty />} />
+          <Route path="/explore" element={<ExploreVillage />} />
+          <Route path="/village/:pincode" element={<VillageDetails />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

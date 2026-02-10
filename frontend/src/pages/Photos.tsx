@@ -1,110 +1,236 @@
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Camera, MapPin, Plus, Info } from "lucide-react";
+import { Plus, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-village.jpg";
 
-// Mock data for photos (using placeholder)
-const photos = [
-  { id: 1, title: "Rice Fields at Dawn", village: "Wayanad", category: "Fields" },
-  { id: 2, title: "Ancient Temple Steps", village: "Thanjavur", category: "Temple" },
-  { id: 3, title: "Village Well", village: "Jaisalmer", category: "Architecture" },
-  { id: 4, title: "Monsoon Greenery", village: "Coorg", category: "Nature" },
-  { id: 5, title: "Traditional Hut", village: "Sundarbans", category: "Architecture" },
-  { id: 6, title: "Sunset Over Farms", village: "Punjab", category: "Fields" },
-];
+/* ---------------- TYPES ---------------- */
 
-const categoryColors: Record<string, string> = {
-  Fields: "bg-secondary/80",
-  Temple: "bg-primary/80",
-  Architecture: "bg-accent/80",
-  Nature: "bg-secondary/80",
+type Village = {
+  id: string;
+  name: string;
 };
 
+type Photo = {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  village: string;
+  pincode: string;
+};
+
+/* ---------------- DEFAULT ---------------- */
+
+const DEFAULT_PHOTOS: Photo[] = [
+  {
+    id: "demo",
+    title: "Rice Fields at Dawn",
+    imageUrl: heroImage,
+    village: "Wayanad",
+    pincode: "673121"
+  }
+];
+
 export default function Photos() {
+  const [photos, setPhotos] = useState<Photo[]>(DEFAULT_PHOTOS);
+  const [showForm, setShowForm] = useState(false);
+
+  /* FORM STATE */
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [villages, setVillages] = useState<Village[]>([]);
+  const [village, setVillage] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [loadingVillage, setLoadingVillage] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  /* ---------------- PINCODE → VILLAGES ---------------- */
+  useEffect(() => {
+    if (pincode.length !== 6) {
+      setVillages([]);
+      setVillage("");
+      return;
+    }
+
+    const t = setTimeout(async () => {
+      setLoadingVillage(true);
+      try {
+        const res = await fetch(`http://localhost:4000/api/pincodes/${pincode}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (Array.isArray(data.villages)) {
+          setVillages(data.villages);
+          if (data.villages.length === 1) {
+            setVillage(data.villages[0].name);
+          }
+        }
+      } finally {
+        setLoadingVillage(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(t);
+  }, [pincode]);
+
+  /* ---------------- LOAD PHOTOS ---------------- */
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("http://localhost:4000/api/photos");
+      if (!res.ok) return;
+      const data = await res.json();
+      setPhotos(data);
+    })();
+  }, []);
+
+  /* ---------------- UPLOAD ---------------- */
+  async function uploadPhoto() {
+    if (!file || !title || !pincode || !village) return;
+
+    setSubmitting(true);
+
+    const fd = new FormData();
+    fd.append("photo", file);
+    fd.append("title", title);
+    fd.append("description", description);
+    fd.append("pincode", pincode);
+    fd.append("villageName", village);
+
+    const res = await fetch("http://localhost:4000/api/photos", {
+      method: "POST",
+      body: fd
+    });
+
+    if (!res.ok) {
+      alert("Upload failed");
+      setSubmitting(false);
+      return;
+    }
+
+    const newPhoto = await res.json();
+    setPhotos(prev => [newPhoto, ...prev]);
+
+    setShowForm(false);
+    setTitle("");
+    setDescription("");
+    setPincode("");
+    setVillage("");
+    setVillages([]);
+    setFile(null);
+    setSubmitting(false);
+  }
+
   return (
     <Layout>
-      {/* Header */}
-      <section className="py-12 lg:py-16 border-b border-border">
-        <div className="village-container">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-medium mb-4">
-                <Camera className="w-4 h-4" />
-                <span>Village Photos</span>
-              </div>
-              <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-2">
-                Nature & Places
-              </h1>
-              <p className="text-muted-foreground text-lg max-w-2xl">
-                Capturing the timeless beauty of village landscapes, temples, 
-                farms, and traditional architecture.
-              </p>
-            </div>
-            <Button variant="nature" size="lg">
-              <Plus className="w-4 h-4" />
-              Upload Photo
-            </Button>
-          </div>
-
-          {/* Guidelines Notice */}
-          <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border flex items-start gap-3">
-            <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
-            <div className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Photo Guidelines:</strong> We celebrate nature and places, 
-              not individuals. Please ensure no human faces are visible in uploaded photos. 
-              Focus on fields, temples, architecture, and natural landscapes.
-            </div>
-          </div>
+      <section className="py-12 border-b">
+        <div className="village-container flex justify-between">
+          <h1 className="font-serif text-3xl">Village Photos</h1>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="w-4 h-4" /> Upload
+          </Button>
         </div>
       </section>
 
-      {/* Photo Grid */}
-      <section className="py-12 lg:py-16">
-        <div className="village-container">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {photos.map((photo, index) => (
-              <div
-                key={photo.id}
-                className="group relative aspect-[4/3] rounded-xl overflow-hidden cursor-pointer animate-fade-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Placeholder Image */}
-                <img
-                  src={heroImage}
-                  alt={photo.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                {/* Category Badge */}
-                <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-medium text-primary-foreground ${categoryColors[photo.category]}`}>
-                  {photo.category}
-                </span>
-
-                {/* Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                  <h3 className="font-serif text-lg font-semibold text-primary-foreground mb-1">
-                    {photo.title}
-                  </h3>
-                  <p className="text-primary-foreground/80 text-sm flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {photo.village}
+      {/* GRID */}
+      <section className="py-12">
+        <div className="village-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {photos.map(photo => (
+            <div key={photo.id} className="rounded-xl overflow-hidden border">
+              <img
+                src={photo.imageUrl}
+                alt={photo.title}
+                className="w-full h-56 object-cover"
+              />
+              <div className="p-4">
+                <h3 className="font-serif text-lg">{photo.title}</h3>
+                {photo.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {photo.description}
                   </p>
-                </div>
+                )}
+                <p className="text-sm flex items-center gap-1 mt-2">
+                  <MapPin className="w-4 h-4" />
+                  {photo.village} ({photo.pincode})
+                </p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          {/* Load More */}
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg">
-              Load More Photos
+      {/* MODAL */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg relative space-y-3">
+            <button
+              onClick={() => setShowForm(false)}
+              className="absolute top-4 right-4"
+            >
+              <X />
+            </button>
+
+            <input
+              className="border p-3 rounded w-full"
+              placeholder="Title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+            />
+
+            <textarea
+              className="border p-3 rounded w-full"
+              placeholder="Description"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+
+            <input
+              className="border p-3 rounded w-full"
+              placeholder="Pincode"
+              value={pincode}
+              onChange={e => setPincode(e.target.value)}
+            />
+
+            {loadingVillage && <p className="text-sm">Detecting villages…</p>}
+
+            {villages.length > 1 && (
+              <select
+                className="border p-3 rounded w-full"
+                value={village}
+                onChange={e => setVillage(e.target.value)}
+              >
+                <option value="">Select village</option>
+                {villages.map(v => (
+                  <option key={v.id} value={v.name}>{v.name}</option>
+                ))}
+              </select>
+            )}
+
+            {villages.length === 1 && (
+              <input
+                className="border p-3 rounded w-full bg-gray-100"
+                value={village}
+                readOnly
+              />
+            )}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setFile(e.target.files?.[0] || null)}
+            />
+
+            <Button
+              className="w-full"
+              onClick={uploadPhoto}
+              disabled={submitting || !village}
+            >
+              {submitting ? "Uploading…" : "Upload Photo"}
             </Button>
           </div>
         </div>
-      </section>
+      )}
     </Layout>
   );
 }

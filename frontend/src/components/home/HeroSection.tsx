@@ -7,7 +7,7 @@ export function HeroSection() {
     <section className="relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-sunset opacity-20" />
-      
+
       {/* Texture overlay */}
       <div className="absolute inset-0 texture-grain" />
 
@@ -27,18 +27,20 @@ export function HeroSection() {
 
           {/* Subheading */}
           <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-fade-up delay-200">
-            Preserve and share the rich culture, traditions, recipes, and natural 
-            beauty of your village. Connect with your roots and inspire others.
+            Preserve and share the rich culture, traditions, recipes, and
+            natural beauty of your village. Connect with your roots and inspire
+            others.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up delay-300">
             <Button variant="hero" size="xl" asChild>
-              <Link to="/stories">
+              <Link to="/explore">
                 <MapPin className="w-5 h-5" />
                 Explore Villages
               </Link>
             </Button>
+
             <Button variant="outline" size="xl" asChild>
               <Link to="/stories">
                 Share Your Story

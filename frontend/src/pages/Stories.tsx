@@ -1,110 +1,136 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchPincode, fetchStoriesByVillage } from "@/lib/api";
-import { Village, Story } from "@/types";
+import { Layout } from "@/components/layout/Layout";
 
-/* ---------------- STORY BOOK ---------------- */
+/* ---------------- TYPES ---------------- */
 
-function StoryBook({
-  title,
-  image,
-  content,
-  compact = false,
-}: {
+type Village = {
+  id: string;
+  name: string;
+};
+
+type Story = {
+  id: string;
   title: string;
-  image?: string;
-  content: string;
-  compact?: boolean;
-}) {
-  const pages = content.match(/.{1,420}/g) || [];
-  const [page, setPage] = useState(0);
+  originalText: string;
+  createdAt: string;
+  author: { email: string };
+  village: {
+    id: string;
+    name: string;
+    pincode: string;
+  };
+};
 
-  return (
-    <motion.div
-      layout
-      className="bg-[#fdf8f2] shadow-xl rounded-2xl p-8 w-full max-w-xl overflow-hidden"
-    >
-      {page === 0 && image && (
-        <img
-          src={image}
-          alt={title}
-          className="rounded-xl mb-5 object-cover h-56 w-full"
-        />
-      )}
-
-      <h3 className="font-serif text-2xl mb-4">{title}</h3>
-
-      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-        {pages[page]}
-      </p>
-
-      {!compact && (
-        <div className="flex justify-between mt-6 text-gray-500">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-            className="disabled:opacity-30"
-          >
-            ◀ Prev
-          </button>
-          <span>
-            Page {page + 1} / {pages.length}
-          </span>
-          <button
-            disabled={page === pages.length - 1}
-            onClick={() => setPage((p) => p + 1)}
-            className="disabled:opacity-30"
-          >
-            Next ▶
-          </button>
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
-/* ---------------- MAIN PAGE ---------------- */
+/* ---------------- COMPONENT ---------------- */
 
 export default function Stories() {
+  /* ---------- DATA ---------- */
+  const [allStories, setAllStories] = useState<Story[]>([]);
+  const [visibleStories, setVisibleStories] = useState<Story[]>([]);
+  const [activeStory, setActiveStory] = useState<Story | null>(null);
+
+  /* ---------- FILTER ---------- */
   const [pincode, setPincode] = useState("");
   const [villages, setVillages] = useState<Village[]>([]);
   const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
+  const [loadingVillages, setLoadingVillages] = useState(false);
 
-  const [stories, setStories] = useState<Story[]>([]);
-  const [activeStory, setActiveStory] = useState<Story | null>(null);
+  /* ---------- ADD STORY ---------- */
   const [showForm, setShowForm] = useState(false);
-
-  /* FORM STATE */
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [image, setImage] = useState<string | undefined>();
+  const [formPincode, setFormPincode] = useState("");
+  const [formVillages, setFormVillages] = useState<Village[]>([]);
+  const [formVillage, setFormVillage] = useState<Village | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  /* ESC closes fullscreen */
+  /* ---------------- LOAD STORIES ---------------- */
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActiveStory(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    fetch("http://localhost:4000/api/stories")
+      .then((res) => res.json())
+      .then((data: Story[]) => {
+        setAllStories(data);
+        setVisibleStories(data);
+      });
   }, []);
 
-  async function handlePincodeSearch() {
-    const data = await fetchPincode(pincode);
-    setVillages(data.villages);
+  /* ---------------- FIND VILLAGES ---------------- */
+
+  async function findVillages() {
+    if (pincode.length !== 6) return;
+
+    setLoadingVillages(true);
+    setVillages([]);
     setSelectedVillage(null);
-    setStories([]);
+
+    try {
+      const res = await fetch(
+        `http://localhost:4000/api/pincodes/${pincode}`
+      );
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const list: Village[] = data.villages || [];
+
+      setVillages(list);
+
+      if (list.length === 1) {
+        applyVillageFilter(list[0]);
+      }
+    } finally {
+      setLoadingVillages(false);
+    }
   }
 
-  async function handleVillageSelect(village: Village) {
+  function applyVillageFilter(village: Village) {
     setSelectedVillage(village);
-    const data = await fetchStoriesByVillage(village.id);
-    setStories(data);
+    setVisibleStories(
+      allStories.filter((s) => s.village.id === village.id)
+    );
   }
 
-  async function createStory() {
-    if (!email || !title || !text || !selectedVillage) return;
+  function clearFilter() {
+    setPincode("");
+    setVillages([]);
+    setSelectedVillage(null);
+    setVisibleStories(allStories);
+  }
+
+  /* ---------------- ADD STORY PINCODE ---------------- */
+
+  useEffect(() => {
+    if (formPincode.length !== 6) {
+      setFormVillages([]);
+      setFormVillage(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const res = await fetch(
+        `http://localhost:4000/api/pincodes/${formPincode}`
+      );
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const list: Village[] = data.villages || [];
+
+      setFormVillages(list);
+
+      if (list.length === 1) {
+        setFormVillage(list[0]);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formPincode]);
+
+  /* ---------------- SUBMIT STORY ---------------- */
+
+  async function submitStory() {
+    if (!email || !title || !text || !formVillage) return;
 
     setSubmitting(true);
 
@@ -115,188 +141,198 @@ export default function Stories() {
         title,
         originalText: text,
         originalLang: "en",
-        villageId: selectedVillage.id,
+        villageId: formVillage.id,
         authorEmail: email,
-        image,
       }),
     });
 
-    const newStory = await res.json();
-    newStory.image = image;
+    const newStory: Story = await res.json();
 
-    setStories((prev) => [newStory, ...prev]);
+    setAllStories((p) => [newStory, ...p]);
+    setVisibleStories((p) => [newStory, ...p]);
+
     setShowForm(false);
-
     setEmail("");
     setTitle("");
     setText("");
-    setImage(undefined);
+    setFormPincode("");
+    setFormVillages([]);
+    setFormVillage(null);
     setSubmitting(false);
   }
 
-  return (
-    <div className="bg-[#faf7f2] min-h-screen">
-      {/* NAVBAR */}
-      <div className="sticky top-0 z-40 bg-[#faf7f2] border-b">
-        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-          <h1 className="font-serif text-2xl">Village Stories</h1>
+  /* ---------------- UI ---------------- */
 
-          <div className="flex gap-4">
+  return (
+    <Layout>
+      <div className="bg-[#faf7f2] min-h-screen">
+        <div className="max-w-7xl mx-auto px-8 py-14 space-y-10">
+
+          {/* HEADER */}
+          <div className="flex justify-between items-center">
+            <h1 className="font-serif text-3xl">Village Stories</h1>
+            <button
+              onClick={() => setShowForm((p) => !p)}
+              className="border px-6 py-3 rounded-xl hover:bg-black hover:text-white"
+            >
+              {showForm ? "Close" : "Add Story"}
+            </button>
+          </div>
+
+          {/* FIND VILLAGE */}
+          <div className="flex flex-wrap gap-4 items-center max-w-xl">
             <input
-              className="border rounded-xl px-5 py-2.5"
-              placeholder="Pincode"
+              className="border px-4 py-2 rounded-xl w-full sm:w-auto"
+              placeholder="Enter pincode"
               value={pincode}
               onChange={(e) => setPincode(e.target.value)}
             />
+
             <button
-              onClick={handlePincodeSearch}
-              className="bg-black text-white px-6 py-2.5 rounded-xl"
+              onClick={findVillages}
+              className="bg-black text-white px-5 py-2 rounded-xl"
             >
-              Find
+              Find Village
             </button>
 
             {selectedVillage && (
               <button
-                onClick={() => setShowForm((s) => !s)}
-                className="border px-6 py-2.5 rounded-xl hover:bg-black hover:text-white"
+                onClick={clearFilter}
+                className="text-sm underline"
               >
-                Add Story
+                Clear Filter
               </button>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-14 space-y-14">
-        {!selectedVillage && villages.length > 0 && (
-          <ul className="max-w-md space-y-3">
-            {villages.map((v) => (
-              <li
-                key={v.id}
-                onClick={() => handleVillageSelect(v)}
-                className="border p-4 rounded-xl cursor-pointer hover:bg-gray-100"
-              >
-                {v.name}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {selectedVillage && (
-          <>
-            {/* ADD STORY FORM */}
-            {showForm && (
-              <div className="bg-white p-8 rounded-2xl shadow-lg max-w-2xl space-y-4">
-                <input
-                  className="border p-3 w-full rounded-xl"
-                  placeholder="Your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-
-                <input
-                  className="border p-3 w-full rounded-xl"
-                  placeholder="Story title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-
-                {/* IMAGE UPLOAD */}
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">
-                    Add a photo (optional)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () =>
-                        setImage(reader.result as string);
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-
-                  {image && (
-                    <img
-                      src={image}
-                      alt="Preview"
-                      className="mt-3 h-40 rounded-xl object-cover"
-                    />
-                  )}
-                </div>
-
-                <textarea
-                  className="border p-3 w-full rounded-xl"
-                  rows={5}
-                  placeholder="Write your story..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                />
-
-                <button
-                  onClick={createStory}
-                  disabled={submitting}
-                  className="bg-black text-white px-6 py-3 rounded-xl"
-                >
-                  {submitting ? "Publishing..." : "Publish Story"}
-                </button>
-              </div>
-            )}
-
-            {/* STORY GRID */}
-            <motion.div
-              layout
-              className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12 ${
-                activeStory ? "blur-sm pointer-events-none" : ""
-              }`}
+          {/* VILLAGE SELECT */}
+          {villages.length > 1 && (
+            <select
+              className="border p-3 rounded-xl max-w-md"
+              value={selectedVillage?.id || ""}
+              onChange={(e) =>
+                applyVillageFilter(
+                  villages.find((v) => v.id === e.target.value)!
+                )
+              }
             >
-              {stories.map((story) => (
-                <motion.div
-                  key={story.id}
-                  layoutId={story.id}
-                  onClick={() => setActiveStory(story)}
-                  className="cursor-pointer"
-                >
-                  <StoryBook
-                    title={story.title}
-                    content={story.originalText.slice(0, 300) + "…"}
-                    image={(story as any).image}
-                    compact
-                  />
-                </motion.div>
+              <option value="">Select village</option>
+              {villages.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
               ))}
-            </motion.div>
-          </>
-        )}
-      </div>
+            </select>
+          )}
 
-      {/* FULLSCREEN STORY */}
-      <AnimatePresence>
-        {activeStory && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-[#faf7f2]/90 backdrop-blur-md"
-            onClick={() => setActiveStory(null)}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              layoutId={activeStory.id}
-              className="max-w-4xl mx-auto px-8 py-24"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <StoryBook
-                title={activeStory.title}
-                content={activeStory.originalText}
-                image={(activeStory as any).image}
+          {/* ADD STORY FORM */}
+          {showForm && (
+            <div className="bg-white p-8 rounded-2xl shadow-lg max-w-2xl space-y-4">
+              <input
+                className="border p-3 rounded-xl w-full"
+                placeholder="Your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
+              <input
+                className="border p-3 rounded-xl w-full"
+                placeholder="Story title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <textarea
+                className="border p-3 rounded-xl w-full"
+                rows={5}
+                placeholder="Write your story..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+              <input
+                className="border p-3 rounded-xl w-full"
+                placeholder="Enter pincode"
+                value={formPincode}
+                onChange={(e) => setFormPincode(e.target.value)}
+              />
+
+              {formVillages.length > 1 && (
+                <select
+                  className="border p-3 rounded-xl w-full"
+                  value={formVillage?.id || ""}
+                  onChange={(e) =>
+                    setFormVillage(
+                      formVillages.find((v) => v.id === e.target.value)!
+                    )
+                  }
+                >
+                  <option value="">Select village</option>
+                  {formVillages.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {formVillages.length === 1 && formVillage && (
+                <input
+                  className="border p-3 rounded-xl w-full bg-gray-100"
+                  value={formVillage.name}
+                  readOnly
+                />
+              )}
+
+              <button
+                onClick={submitStory}
+                disabled={submitting || !formVillage}
+                className="bg-black text-white px-6 py-3 rounded-xl"
+              >
+                {submitting ? "Publishing..." : "Publish Story"}
+              </button>
+            </div>
+          )}
+
+          {/* STORIES */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
+            {visibleStories.map((story) => (
+              <motion.div
+                key={story.id}
+                onClick={() => setActiveStory(story)}
+                className="cursor-pointer bg-[#fdf8f2] shadow-lg rounded-2xl p-6"
+              >
+                <h3 className="font-serif text-xl mb-2">{story.title}</h3>
+                <p className="text-sm mb-4">
+                  {(story.originalText || "").slice(0, 120)}…
+                </p>
+                <span className="text-xs bg-black text-white px-3 py-1 rounded-full">
+                  {story.village.name}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* FULL STORY */}
+        <AnimatePresence>
+          {activeStory && (
+            <motion.div
+              className="fixed inset-0 z-50 bg-[#faf7f2]/90 backdrop-blur-md"
+              onClick={() => setActiveStory(null)}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-3xl mx-auto py-24 px-6"
+              >
+                <h2 className="font-serif text-3xl mb-6">
+                  {activeStory.title}
+                </h2>
+                <p className="whitespace-pre-wrap">
+                  {activeStory.originalText}
+                </p>
+              </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )}
+        </AnimatePresence>
+      </div>
+    </Layout>
   );
 }
