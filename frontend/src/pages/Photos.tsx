@@ -32,6 +32,8 @@ const DEFAULT_PHOTOS: Photo[] = [
   }
 ];
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Photos() {
   const [photos, setPhotos] = useState<Photo[]>(DEFAULT_PHOTOS);
   const [showForm, setShowForm] = useState(false);
@@ -57,8 +59,11 @@ export default function Photos() {
     const t = setTimeout(async () => {
       setLoadingVillage(true);
       try {
-        const res = await fetch(`http://localhost:4000/api/pincodes/${pincode}`);
+        const res = await fetch(
+          `${API_URL}/api/pincodes/${pincode}`
+        );
         if (!res.ok) return;
+
         const data = await res.json();
 
         if (Array.isArray(data.villages)) {
@@ -78,8 +83,9 @@ export default function Photos() {
   /* ---------------- LOAD PHOTOS ---------------- */
   useEffect(() => {
     (async () => {
-      const res = await fetch("http://localhost:4000/api/photos");
+      const res = await fetch(`${API_URL}/api/photos`);
       if (!res.ok) return;
+
       const data = await res.json();
       setPhotos(data);
     })();
@@ -98,7 +104,7 @@ export default function Photos() {
     fd.append("pincode", pincode);
     fd.append("villageName", village);
 
-    const res = await fetch("http://localhost:4000/api/photos", {
+    const res = await fetch(`${API_URL}/api/photos`, {
       method: "POST",
       body: fd
     });

@@ -8,6 +8,8 @@ type Village = {
   name: string;
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function ExploreVillage() {
   const navigate = useNavigate();
 
@@ -29,9 +31,8 @@ export default function ExploreVillage() {
     setSelectedVillage("");
 
     try {
-      // ✅ CORRECT API
       const res = await fetch(
-        `http://localhost:4000/api/pincodes/${pincode}`
+        `${API_URL}/api/pincodes/${pincode}`
       );
 
       if (!res.ok) {
@@ -46,13 +47,12 @@ export default function ExploreVillage() {
         return;
       }
 
-      // ✅ Auto-redirect if only one village
       if (list.length === 1) {
         navigate(`/village/${list[0].id}`);
       } else {
         setVillages(list);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch villages");
     } finally {
       setLoading(false);
@@ -63,7 +63,6 @@ export default function ExploreVillage() {
     <Layout>
       <div className="min-h-screen bg-[#faf7f2] flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full space-y-5">
-
           <h1 className="font-serif text-2xl text-center">
             Explore a Village
           </h1>
@@ -88,7 +87,6 @@ export default function ExploreVillage() {
             {loading ? "Finding..." : "Find Village"}
           </Button>
 
-          {/* Multiple villages */}
           {villages.length > 1 && (
             <>
               <select

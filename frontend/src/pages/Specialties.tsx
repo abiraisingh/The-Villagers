@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Layout } from "@/components/layout/Layout";
-import { Leaf, MapPin, Plus, Star, ChevronRight } from "lucide-react";
+import { Leaf, MapPin, Plus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -8,7 +9,7 @@ interface Specialty {
   id: string;
   name: string;
   description?: string | null;
-  type: string;       // backend field
+  type: string;
   village: string;
   pincode: string;
   createdAt: string;
@@ -22,6 +23,8 @@ const typeColors: Record<string, string> = {
   Beverage: "bg-secondary/10 text-secondary",
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Specialties() {
   const navigate = useNavigate();
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
@@ -32,12 +35,11 @@ export default function Specialties() {
   useEffect(() => {
     const fetchSpecialties = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/specialties");
+        const res = await fetch(`${API_URL}/api/specialties`);
         if (!res.ok) throw new Error("Failed to fetch specialties");
 
         const data = await res.json();
         setSpecialties(data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(err.message || "Something went wrong");
       } finally {
@@ -96,7 +98,6 @@ export default function Specialties() {
                 className="group village-card animate-fade-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* Type badge */}
                 <span
                   className={`inline-flex px-3 py-1 rounded-full text-xs font-medium mb-3 ${
                     typeColors[item.type] || "bg-muted text-muted-foreground"

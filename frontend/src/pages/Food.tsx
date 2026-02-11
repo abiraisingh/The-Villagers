@@ -20,6 +20,8 @@ type Food = {
   pincode: string;
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function FoodPage() {
   const [foods, setFoods] = useState<Food[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -46,8 +48,11 @@ export default function FoodPage() {
     const t = setTimeout(async () => {
       setLoadingVillage(true);
       try {
-        const res = await fetch(`http://localhost:4000/api/pincodes/${pincode}`);
+        const res = await fetch(
+          `${API_URL}/api/pincodes/${pincode}`
+        );
         if (!res.ok) return;
+
         const data = await res.json();
 
         if (Array.isArray(data.villages)) {
@@ -67,8 +72,9 @@ export default function FoodPage() {
   /* ---------------- LOAD FOODS ---------------- */
   useEffect(() => {
     (async () => {
-      const res = await fetch("http://localhost:4000/api/foods");
+      const res = await fetch(`${API_URL}/api/foods`);
       if (!res.ok) return;
+
       const data = await res.json();
       setFoods(data);
     })();
@@ -88,7 +94,7 @@ export default function FoodPage() {
     fd.append("villageName", village);
     if (file) fd.append("image", file);
 
-    const res = await fetch("http://localhost:4000/api/foods", {
+    const res = await fetch(`${API_URL}/api/foods`, {
       method: "POST",
       body: fd
     });

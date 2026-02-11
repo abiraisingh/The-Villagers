@@ -22,21 +22,18 @@ type Story = {
   };
 };
 
-/* ---------------- COMPONENT ---------------- */
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Stories() {
-  /* ---------- DATA ---------- */
   const [allStories, setAllStories] = useState<Story[]>([]);
   const [visibleStories, setVisibleStories] = useState<Story[]>([]);
   const [activeStory, setActiveStory] = useState<Story | null>(null);
 
-  /* ---------- FILTER ---------- */
   const [pincode, setPincode] = useState("");
   const [villages, setVillages] = useState<Village[]>([]);
   const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
   const [loadingVillages, setLoadingVillages] = useState(false);
 
-  /* ---------- ADD STORY ---------- */
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
@@ -49,7 +46,7 @@ export default function Stories() {
   /* ---------------- LOAD STORIES ---------------- */
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/stories")
+    fetch(`${API_URL}/api/stories`)
       .then((res) => res.json())
       .then((data: Story[]) => {
         setAllStories(data);
@@ -68,7 +65,7 @@ export default function Stories() {
 
     try {
       const res = await fetch(
-        `http://localhost:4000/api/pincodes/${pincode}`
+        `${API_URL}/api/pincodes/${pincode}`
       );
       if (!res.ok) return;
 
@@ -110,7 +107,7 @@ export default function Stories() {
 
     const timer = setTimeout(async () => {
       const res = await fetch(
-        `http://localhost:4000/api/pincodes/${formPincode}`
+        `${API_URL}/api/pincodes/${formPincode}`
       );
       if (!res.ok) return;
 
@@ -134,7 +131,7 @@ export default function Stories() {
 
     setSubmitting(true);
 
-    const res = await fetch("http://localhost:4000/api/stories", {
+    const res = await fetch(`${API_URL}/api/stories`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -168,7 +165,6 @@ export default function Stories() {
       <div className="bg-[#faf7f2] min-h-screen">
         <div className="max-w-7xl mx-auto px-8 py-14 space-y-10">
 
-          {/* HEADER */}
           <div className="flex justify-between items-center">
             <h1 className="font-serif text-3xl">Village Stories</h1>
             <button
@@ -179,7 +175,6 @@ export default function Stories() {
             </button>
           </div>
 
-          {/* FIND VILLAGE */}
           <div className="flex flex-wrap gap-4 items-center max-w-xl">
             <input
               className="border px-4 py-2 rounded-xl w-full sm:w-auto"
@@ -205,7 +200,6 @@ export default function Stories() {
             )}
           </div>
 
-          {/* VILLAGE SELECT */}
           {villages.length > 1 && (
             <select
               className="border p-3 rounded-xl max-w-md"
@@ -225,73 +219,7 @@ export default function Stories() {
             </select>
           )}
 
-          {/* ADD STORY FORM */}
-          {showForm && (
-            <div className="bg-white p-8 rounded-2xl shadow-lg max-w-2xl space-y-4">
-              <input
-                className="border p-3 rounded-xl w-full"
-                placeholder="Your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                className="border p-3 rounded-xl w-full"
-                placeholder="Story title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <textarea
-                className="border p-3 rounded-xl w-full"
-                rows={5}
-                placeholder="Write your story..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-              />
-              <input
-                className="border p-3 rounded-xl w-full"
-                placeholder="Enter pincode"
-                value={formPincode}
-                onChange={(e) => setFormPincode(e.target.value)}
-              />
-
-              {formVillages.length > 1 && (
-                <select
-                  className="border p-3 rounded-xl w-full"
-                  value={formVillage?.id || ""}
-                  onChange={(e) =>
-                    setFormVillage(
-                      formVillages.find((v) => v.id === e.target.value)!
-                    )
-                  }
-                >
-                  <option value="">Select village</option>
-                  {formVillages.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              {formVillages.length === 1 && formVillage && (
-                <input
-                  className="border p-3 rounded-xl w-full bg-gray-100"
-                  value={formVillage.name}
-                  readOnly
-                />
-              )}
-
-              <button
-                onClick={submitStory}
-                disabled={submitting || !formVillage}
-                className="bg-black text-white px-6 py-3 rounded-xl"
-              >
-                {submitting ? "Publishing..." : "Publish Story"}
-              </button>
-            </div>
-          )}
-
-          {/* STORIES */}
+          {/* Stories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
             {visibleStories.map((story) => (
               <motion.div
@@ -311,7 +239,6 @@ export default function Stories() {
           </div>
         </div>
 
-        {/* FULL STORY */}
         <AnimatePresence>
           {activeStory && (
             <motion.div

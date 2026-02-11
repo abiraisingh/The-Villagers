@@ -17,6 +17,8 @@ interface VillageData {
   stories: any[];
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function VillageDetails() {
   const { villageId } = useParams<{ villageId: string }>();
 
@@ -33,7 +35,7 @@ export default function VillageDetails() {
         setError(null);
 
         const res = await fetch(
-          `http://localhost:4000/api/village-details/${villageId}`
+          `${API_URL}/api/village-details/${villageId}`
         );
 
         if (!res.ok) {
@@ -91,6 +93,7 @@ export default function VillageDetails() {
     <Layout>
       <section className="py-12">
         <div className="village-container space-y-12">
+
           {/* HEADER */}
           <div>
             <h1 className="font-serif text-4xl font-bold mb-2">
@@ -114,10 +117,7 @@ export default function VillageDetails() {
             ) : (
               <ul className="space-y-2">
                 {data.specialties.map((s) => (
-                  <li
-                    key={s.id}
-                    className="bg-white p-4 rounded-xl shadow"
-                  >
+                  <li key={s.id} className="bg-white p-4 rounded-xl shadow">
                     <p className="font-medium">
                       {s.title || s.name}
                     </p>
@@ -143,10 +143,7 @@ export default function VillageDetails() {
             ) : (
               <ul className="space-y-2">
                 {data.food.map((f) => (
-                  <li
-                    key={f.id}
-                    className="bg-white p-4 rounded-xl shadow"
-                  >
+                  <li key={f.id} className="bg-white p-4 rounded-xl shadow">
                     <p className="font-medium">{f.name}</p>
                     {f.description && (
                       <p className="text-sm text-muted-foreground mt-1">
@@ -170,10 +167,7 @@ export default function VillageDetails() {
             ) : (
               <ul className="space-y-2">
                 {data.stories.map((s) => (
-                  <li
-                    key={s.id}
-                    className="bg-white p-4 rounded-xl shadow"
-                  >
+                  <li key={s.id} className="bg-white p-4 rounded-xl shadow">
                     <p className="font-medium">{s.title}</p>
                     {s.originalText && (
                       <p className="text-sm text-muted-foreground mt-1">
@@ -185,6 +179,7 @@ export default function VillageDetails() {
               </ul>
             )}
           </section>
+
         </div>
       </section>
     </Layout>

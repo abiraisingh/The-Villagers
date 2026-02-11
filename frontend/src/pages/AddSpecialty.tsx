@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface Village {
   id: string;
   name: string;
@@ -50,7 +52,7 @@ export default function AddSpecialty() {
 
       try {
         const res = await fetch(
-          `http://localhost:4000/api/pincodes/${form.pincode}`
+          `${API_URL}/api/pincodes/${form.pincode}`
         );
 
         if (!res.ok) throw new Error("Invalid pincode");
@@ -110,10 +112,10 @@ export default function AddSpecialty() {
         description: form.description,
         category: form.category,
         pincode: form.pincode,
-        villageName: form.village, // ✅ backend resolves villageId
+        villageName: form.village,
       };
 
-      const res = await fetch("http://localhost:4000/api/specialties", {
+      const res = await fetch(`${API_URL}/api/specialties`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

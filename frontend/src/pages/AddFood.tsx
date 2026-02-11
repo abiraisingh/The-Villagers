@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const API_URL = import.meta.env.VITE_API_URL;
 /* ---------------- TYPES ---------------- */
 
 type Village = {
@@ -41,7 +42,7 @@ export default function AddFood() {
 
       try {
         const res = await fetch(
-          `http://localhost:4000/api/pincodes/${pincode}`
+          `${API_URL}/api/pincodes/${pincode}`
         );
 
         if (!res.ok) return;
@@ -86,7 +87,7 @@ export default function AddFood() {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/api/foods", {
+      const res = await fetch(`${API_URL}/api/foods`, {
         method: "POST",
         body: formData,
       });
