@@ -84,7 +84,7 @@ The-Villagers/
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/the-villagers.git
+git clone https://github.com/abiraisingh/the-villagers.git
 cd the-villagers
 ```
 ### 2️⃣ Backend Setup
