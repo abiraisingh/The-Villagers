@@ -13,6 +13,7 @@ interface Specialty {
   village: string;
   pincode: string;
   createdAt: string;
+  isDemo?: boolean;
 }
 
 const typeColors: Record<string, string> = {
@@ -25,13 +26,42 @@ const typeColors: Record<string, string> = {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/* ---------------- MOCK DATA ---------------- */
+
+const MOCK_SPECIALTIES: Specialty[] = [
+  {
+    id: "demo-1",
+    name: "Basmati Rice",
+    description:
+      "Premium long-grain aromatic rice cultivated in fertile plains.",
+    type: "Grain",
+    village: "Karnal",
+    pincode: "132001",
+    createdAt: new Date().toISOString(),
+    isDemo: true,
+  },
+  {
+    id: "demo-2",
+    name: "Byadgi Chilli",
+    description: "Famous red chilli known for deep color and mild spice.",
+    type: "Spice",
+    village: "Byadgi",
+    pincode: "581106",
+    createdAt: new Date().toISOString(),
+    isDemo: true,
+  },
+];
+
 export default function Specialties() {
   const navigate = useNavigate();
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
+
+  const [specialties, setSpecialties] = useState<Specialty[]>(MOCK_SPECIALTIES);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   /* ---------------- FETCH FROM BACKEND ---------------- */
+
   useEffect(() => {
     const fetchSpecialties = async () => {
       try {
@@ -39,7 +69,22 @@ export default function Specialties() {
         if (!res.ok) throw new Error("Failed to fetch specialties");
 
         const data = await res.json();
-        setSpecialties(data);
+
+        if (Array.isArray(data)) {
+          setSpecialties((prev) => [
+            ...data.map((item: any) => ({
+              id: item.id,
+              name: item.title, // 👈 map title → name
+              type: item.category, // 👈 map category → type
+              description: item.description,
+              village: item.village,
+              pincode: item.pincode,
+              createdAt: item.createdAt,
+              isDemo: false,
+            })),
+            ...prev,
+          ]);
+        }
       } catch (err: any) {
         setError(err.message || "Something went wrong");
       } finally {
@@ -60,9 +105,7 @@ export default function Specialties() {
               <Leaf className="w-4 h-4" />
               Local Specialties
             </div>
-            <h1 className="font-serif text-4xl font-bold">
-              Pride of the Land
-            </h1>
+            <h1 className="font-serif text-4xl font-bold">Pride of the Land</h1>
             <p className="text-muted-foreground max-w-xl mt-2">
               Unique crops, fruits, and produce that villages are famous for.
             </p>
@@ -86,43 +129,52 @@ export default function Specialties() {
           {error && <p className="text-destructive">{error}</p>}
 
           {!loading && !error && specialties.length === 0 && (
-            <p className="text-muted-foreground">
-              No specialties added yet.
-            </p>
+            <p className="text-muted-foreground">No specialties added yet.</p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {specialties.map((item, index) => (
               <article
                 key={item.id}
-                className="group village-card animate-fade-up"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group bg-card border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 relative animate-fade-up"
+                style={{ animationDelay: `${index * 80}ms` }}
               >
+                {/* Demo Badge */}
+                {item.isDemo && (
+                  <div className="absolute top-4 right-4 bg-yellow-400 text-black text-xs font-semibold px-3 py-1 rounded-full shadow">
+                    Demo
+                  </div>
+                )}
+
+                {/* Category Badge */}
                 <span
-                  className={`inline-flex px-3 py-1 rounded-full text-xs font-medium mb-3 ${
+                  className={`inline-flex px-3 py-1 rounded-full text-xs font-medium mb-4 ${
                     typeColors[item.type] || "bg-muted text-muted-foreground"
                   }`}
                 >
                   {item.type}
                 </span>
 
-                <h2 className="font-serif text-xl font-semibold mb-2">
+                {/* Title */}
+                <h2 className="font-serif text-2xl font-semibold mb-3">
                   {item.name}
                 </h2>
 
+                {/* Description */}
                 {item.description && (
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
                     {item.description}
                   </p>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-border text-sm">
-                  <span className="flex items-center gap-1 text-muted-foreground">
+                {/* Divider + Location */}
+                <div className="border-t border-border pt-4 flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="w-4 h-4" />
                     {item.village}
                   </span>
 
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-all" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition" />
                 </div>
               </article>
             ))}

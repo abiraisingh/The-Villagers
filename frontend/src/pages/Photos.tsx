@@ -3,6 +3,11 @@ import { Layout } from "@/components/layout/Layout";
 import { Plus, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-village.jpg";
+import redfort from "@/assets/red-fort.avif";
+import hawamahal from "@/assets/Hawamahal.jpg";
+import rudraprayag from "@/assets/rudrprayag.avif";
+import katra from "@/assets/katra.jpg";
+import amritsar from "@/assets/amritsar.avif";
 
 /* ---------------- TYPES ---------------- */
 
@@ -23,6 +28,41 @@ type Photo = {
 /* ---------------- DEFAULT ---------------- */
 
 const DEFAULT_PHOTOS: Photo[] = [
+  {
+    id: "demo",
+    title: "Hawa Mahal",
+    imageUrl: hawamahal,
+    village: "Jaipur",
+    pincode: "302002"
+  },
+  {
+    id: "demo",
+    title: "Red Fort",
+    imageUrl: redfort,
+    village: "Delhi",
+    pincode: "110006"
+  },
+  {
+    id: "demo",
+    title: "Rudraprayag",
+    imageUrl: rudraprayag,
+    village: "Rudraprayag",
+    pincode: "246171"
+  },
+  {
+    id: "demo",
+    title: "Vaishno Devi Temple",
+    imageUrl: katra,
+    village: "Katra",
+    pincode: "182301"
+  },
+  {
+    id: "demo",
+    title: "Golden Temple",
+    imageUrl: amritsar,
+    village: "Amritsar",
+    pincode: "143006"
+  },
   {
     id: "demo",
     title: "Rice Fields at Dawn",

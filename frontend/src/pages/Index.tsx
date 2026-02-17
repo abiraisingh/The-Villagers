@@ -1,7 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
-import { VillageFinderSection } from "@/components/home/VillageFinderSection";
 import { CallToAction } from "@/components/home/CallToAction";
 
 const Index = () => {
@@ -9,7 +8,6 @@ const Index = () => {
     <Layout>
       <HeroSection />
       <FeaturesSection />
-      <VillageFinderSection />
       <CallToAction />
     </Layout>
   );

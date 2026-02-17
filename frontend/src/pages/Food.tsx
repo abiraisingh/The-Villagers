@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Plus, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import rajmachawal from "@/assets/rajmachawal.jpg";
+import ghevar from "@/assets/Ghevar.webp";
+import bamboo from "@/assets/bamboo.webp";
+import idli from "@/assets/idli.jpg";
+import samosa from "@/assets/samosa.jpg";
+import ragi from "@/assets/ragi.jpg";
 /* ---------------- TYPES ---------------- */
 
 type Village = {
@@ -18,12 +23,78 @@ type Food = {
   imageUrl?: string;
   village: string;
   pincode: string;
+  isDemo?: boolean;
 };
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/* ---------------- MOCK DATA ---------------- */
+/* Add your local images inside public/images */
+const MOCK_FOODS: Food[] = [
+  {
+    id: "demo-1",
+    name: "Rajma Chawal",
+    description: "Rajma Rice (Rajma Chawal) is a beloved North Indian comfort food consisting of slow-cooked red kidney beans in a thick, spiced onion-tomato gravy, served over steaming, fragrant Basmati rice. It is a hearty, protein-rich, and filling vegetarian dish, commonly accompanied by yogurt, raw onions, or pickles. ",
+    ingredients: "Kidney beans, rice, spices",
+    imageUrl: rajmachawal,
+    village: "Jammu",
+    pincode: "180001",
+    isDemo: true
+  },
+  {
+    id: "demo-2",
+    name: "Ghevar",
+    description: "Ghevar is a traditional Indian sweet made from flour, ghee, and sugar. It is a popular dessert in Rajasthan and is often served during festivals.",
+    ingredients: "Flour, ghee, sugar",
+    imageUrl: ghevar,
+    village: "Jodhpur",
+    pincode: "342001",
+    isDemo: true
+  },
+   {
+    id: "demo-3",
+    name: "Samosa",
+    description: "Samosa is a popular Indian snack made from fried or baked pastry filled with spiced potatoes, peas, and other ingredients.",
+    ingredients: "Flour, ghee, potatoes, peas",
+    imageUrl: samosa,
+    village: "Punjab",
+    pincode: "160001",
+    isDemo: true
+  },
+   {
+    id: "demo-4",
+    name: "Idli",
+    description: "Idli is a popular South Indian breakfast dish made from fermented rice and lentil batter, steamed in special molds.",
+    ingredients: "Rice, lentils, salt",
+    imageUrl: idli,
+    village: "Chennai",
+    pincode: "600001",
+    isDemo: true
+  },
+   {
+    id: "demo-5",
+    name: "Bamboo Shoots",
+    description: "Bamboo shoots are the young stems of bamboo plants, commonly used in South Indian and Southeast Asian cuisines. They are crisp, slightly sweet, and have a mild flavor.",
+    ingredients: "Bamboo shoots, spices",
+    imageUrl: bamboo,
+    village: "Nagaland",
+    pincode: "797001",
+    isDemo: true
+  },
+   {
+    id: "demo-6",
+    name: "Ragi Mudde",
+    description: "Ragi Mudde is a traditional South Indian dish made from ragi (finger millet) flour, water, and salt. It is a popular staple food in Karnataka and Tamil Nadu.",
+    ingredients: "Ragi flour, water, salt",
+    imageUrl: ragi,
+    village: "Karnataka",
+    pincode: "560001",
+    isDemo: true
+  }
+];
+
 export default function FoodPage() {
-  const [foods, setFoods] = useState<Food[]>([]);
+  const [foods, setFoods] = useState<Food[]>(MOCK_FOODS);
   const [showForm, setShowForm] = useState(false);
 
   /* FORM STATE */
@@ -48,9 +119,7 @@ export default function FoodPage() {
     const t = setTimeout(async () => {
       setLoadingVillage(true);
       try {
-        const res = await fetch(
-          `${API_URL}/api/pincodes/${pincode}`
-        );
+        const res = await fetch(`${API_URL}/api/pincodes/${pincode}`);
         if (!res.ok) return;
 
         const data = await res.json();
@@ -69,14 +138,28 @@ export default function FoodPage() {
     return () => clearTimeout(t);
   }, [pincode]);
 
-  /* ---------------- LOAD FOODS ---------------- */
+  /* ---------------- RESTORED BACKEND LOAD ---------------- */
   useEffect(() => {
     (async () => {
-      const res = await fetch(`${API_URL}/api/foods`);
-      if (!res.ok) return;
+      try {
+        const res = await fetch(`${API_URL}/api/foods`);
+        if (!res.ok) return;
 
-      const data = await res.json();
-      setFoods(data);
+        const backendFoods = await res.json();
+
+        // Merge backend foods ABOVE demo foods
+        if (Array.isArray(backendFoods)) {
+          setFoods(prev => [
+            ...backendFoods.map((f: Food) => ({
+              ...f,
+              isDemo: false
+            })),
+            ...prev
+          ]);
+        }
+      } catch (err) {
+        console.log("Backend fetch failed");
+      }
     })();
   }, []);
 
@@ -106,7 +189,11 @@ export default function FoodPage() {
     }
 
     const newFood = await res.json();
-    setFoods(prev => [newFood, ...prev]);
+
+    setFoods(prev => [
+      { ...newFood, isDemo: false },
+      ...prev
+    ]);
 
     setShowForm(false);
     setName("");
@@ -134,7 +221,8 @@ export default function FoodPage() {
       <section className="py-12">
         <div className="village-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {foods.map(food => (
-            <div key={food.id} className="border rounded-xl overflow-hidden">
+            <div key={food.id} className="border rounded-xl overflow-hidden relative">
+              
               {food.imageUrl && (
                 <img
                   src={food.imageUrl}
@@ -142,18 +230,29 @@ export default function FoodPage() {
                   className="w-full h-48 object-cover"
                 />
               )}
+
+              {/* Demo Tag ONLY for mock */}
+              {food.isDemo && (
+                <div className="absolute top-3 right-3 bg-yellow-400 text-black text-xs font-semibold px-2 py-1 rounded-full shadow">
+                  Demo
+                </div>
+              )}
+
               <div className="p-4">
                 <h3 className="font-serif text-lg">{food.name}</h3>
+
                 {food.description && (
                   <p className="text-sm text-muted-foreground">
                     {food.description}
                   </p>
                 )}
+
                 {food.ingredients && (
                   <p className="text-sm mt-1">
                     <strong>Ingredients:</strong> {food.ingredients}
                   </p>
                 )}
+
                 <p className="text-sm flex items-center gap-1 mt-2">
                   <MapPin className="w-4 h-4" />
                   {food.village} ({food.pincode})
@@ -204,27 +303,6 @@ export default function FoodPage() {
             />
 
             {loadingVillage && <p className="text-sm">Detecting villages…</p>}
-
-            {villages.length > 1 && (
-              <select
-                className="border p-3 rounded w-full"
-                value={village}
-                onChange={e => setVillage(e.target.value)}
-              >
-                <option value="">Select village</option>
-                {villages.map(v => (
-                  <option key={v.id} value={v.name}>{v.name}</option>
-                ))}
-              </select>
-            )}
-
-            {villages.length === 1 && (
-              <input
-                className="border p-3 rounded w-full bg-gray-100"
-                value={village}
-                readOnly
-              />
-            )}
 
             <input
               type="file"

@@ -137,92 +137,156 @@ export default function AddSpecialty() {
   };
 
   /* ---------------- UI ---------------- */
-  return (
-    <Layout>
-      <section className="py-12">
-        <div className="village-container max-w-2xl">
-          <h1 className="font-serif text-3xl font-bold mb-6">
-            Add Specialty
+  /* ---------------- UI ---------------- */
+return (
+  <Layout>
+    <section className="py-16 bg-gradient-to-b from-background to-muted/20">
+      <div className="village-container max-w-3xl">
+
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="font-serif text-4xl font-bold mb-3">
+            Add Village Specialty
           </h1>
+          <p className="text-muted-foreground">
+            Share what makes your village unique — crops, crafts, festivals, or traditions.
+          </p>
+        </div>
 
-          {error && (
-            <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg flex gap-2">
-              <AlertCircle className="w-5 h-5" />
-              {error}
-            </div>
-          )}
+        {/* Alerts */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
 
-          {success && (
-            <div className="mb-4 p-4 bg-green-500/10 text-green-700 rounded-lg flex gap-2">
-              <CheckCircle className="w-5 h-5" />
-              {success}
-            </div>
-          )}
+        {success && (
+          <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-700 flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 mt-0.5" />
+            <span>{success}</span>
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <input
-              name="title"
-              placeholder="Specialty Title"
-              value={form.title}
-              onChange={handleChange}
-              className="w-full input"
-            />
+        {/* Card */}
+        <div className="bg-card border border-border rounded-2xl shadow-sm p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
 
-            <textarea
-              name="description"
-              placeholder="Description"
-              value={form.description}
-              onChange={handleChange}
-              className="w-full input"
-            />
-
-            <input
-              name="pincode"
-              placeholder="Pincode"
-              value={form.pincode}
-              onChange={handleChange}
-              className="w-full input"
-            />
-
-            {villages.length > 1 ? (
-              <select
-                name="village"
-                value={form.village}
-                onChange={handleChange}
-                className="w-full input"
-              >
-                <option value="">Select village</option>
-                {villages.map((v) => (
-                  <option key={v.id} value={v.name}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Specialty Title
+              </label>
               <input
-                name="village"
-                placeholder="Village"
-                value={form.village}
-                readOnly={villages.length === 1}
+                name="title"
+                placeholder="e.g. Alphonso Mango"
+                value={form.title}
                 onChange={handleChange}
-                className="w-full input"
+                className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition"
               />
-            )}
+            </div>
 
-            <input
-              name="category"
-              placeholder="Category (Food, Craft, Festival...)"
-              value={form.category}
-              onChange={handleChange}
-              className="w-full input"
-            />
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                placeholder="Tell us why it's special..."
+                value={form.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition resize-none"
+              />
+            </div>
 
-            <Button type="submit" disabled={loading || loadingVillages}>
-              {loading ? "Submitting..." : "Add Specialty"}
-            </Button>
+            {/* Pincode + Category */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Pincode
+                </label>
+                <input
+                  name="pincode"
+                  placeholder="Enter 6-digit pincode"
+                  value={form.pincode}
+                  onChange={handleChange}
+                  className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Category
+                </label>
+                <input
+                  name="category"
+                  placeholder="Food, Craft, Festival..."
+                  value={form.category}
+                  onChange={handleChange}
+                  className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition"
+                />
+              </div>
+            </div>
+
+            {/* Village */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Village
+              </label>
+
+              {villages.length > 1 ? (
+                <select
+                  name="village"
+                  value={form.village}
+                  onChange={handleChange}
+                  className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition"
+                >
+                  <option value="">Select village</option>
+                  {villages.map((v) => (
+                    <option key={v.id} value={v.name}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name="village"
+                  placeholder="Village name"
+                  value={form.village}
+                  readOnly={villages.length === 1}
+                  onChange={handleChange}
+                  className={`w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary outline-none transition ${
+                    villages.length === 1 ? "bg-muted/30 cursor-not-allowed" : ""
+                  }`}
+                />
+              )}
+
+              {loadingVillages && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Detecting villages…
+                </p>
+              )}
+            </div>
+
+            {/* Submit */}
+            <div className="pt-4">
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full rounded-xl"
+                disabled={loading || loadingVillages}
+              >
+                {loading ? "Submitting..." : "Add Specialty"}
+              </Button>
+            </div>
+
           </form>
         </div>
-      </section>
-    </Layout>
-  );
+      </div>
+    </section>
+  </Layout>
+);
 }

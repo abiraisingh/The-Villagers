@@ -69,7 +69,7 @@ export function Header() {
               <Link to="/stories">
                 <Button variant="hero">
                   <MapPin className="w-4 h-4" />
-                  Find Your Village
+                  Share Story
                 </Button>
               </Link>
             </div>
