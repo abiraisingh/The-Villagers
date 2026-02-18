@@ -14,6 +14,9 @@ import { Header } from "./components/layout/Header";
 import AddSpecialty from "./pages/AddSpecialty";
 import VillageDetails from "./pages/VillageDetails";
 import ExploreVillage from "./pages/ExploreVillage";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
+import Guidelines from "./pages/Guidelines";
 
 
 const queryClient = new QueryClient();
@@ -34,6 +37,10 @@ const App = () => (
           <Route path="/specialties/add" element={<AddSpecialty />} />
           <Route path="/explore" element={<ExploreVillage />} />
           <Route path="/village/:pincode" element={<VillageDetails />} />
+
+           <Route path="/guidelines" element={<Guidelines />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
