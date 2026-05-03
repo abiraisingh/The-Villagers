@@ -29,42 +29,42 @@ type Photo = {
 
 const DEFAULT_PHOTOS: Photo[] = [
   {
-    id: "demo",
+    id: "demo1",
     title: "Hawa Mahal",
     imageUrl: hawamahal,
     village: "Jaipur",
     pincode: "302002"
   },
   {
-    id: "demo",
+    id: "demo2",
     title: "Red Fort",
     imageUrl: redfort,
     village: "Delhi",
     pincode: "110006"
   },
   {
-    id: "demo",
+    id: "demo3",
     title: "Rudraprayag",
     imageUrl: rudraprayag,
     village: "Rudraprayag",
     pincode: "246171"
   },
   {
-    id: "demo",
+    id: "demo4",
     title: "Vaishno Devi Temple",
     imageUrl: katra,
     village: "Katra",
     pincode: "182301"
   },
   {
-    id: "demo",
+    id: "demo5",
     title: "Golden Temple",
     imageUrl: amritsar,
     village: "Amritsar",
     pincode: "143006"
   },
   {
-    id: "demo",
+    id: "demo6",
     title: "Rice Fields at Dawn",
     imageUrl: heroImage,
     village: "Wayanad",
