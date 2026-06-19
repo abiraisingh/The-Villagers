@@ -37,9 +37,12 @@ model Village {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
+  avatarUrl String?
+  password  String?
   villageId String?
   village   Village? @relation(fields: [villageId], references: [id])
   stories   Story[] // 👈 added
+  likes     Like[]
   createdAt DateTime @default(now())
 }
 
@@ -66,6 +69,22 @@ model Photo {
   createdAt   DateTime @default(now())
 
   village     Village  @relation(fields: [villageId], references: [id])
+}
+
+enum ResourceType {
+  PHOTO
+  STORY
+}
+
+model Like {
+  id           String       @id @default(uuid())
+  userId       String
+  resourceType ResourceType
+  resourceId   String
+  user         User         @relation(fields: [userId], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@unique([userId, resourceType, resourceId])
 }
 
 model Food {

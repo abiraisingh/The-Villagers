@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { authFetch, BASE_URL as API_URL } from "@/lib/api";
 /* ---------------- TYPES ---------------- */
 
 type Village = {
@@ -21,6 +20,7 @@ export default function AddFood() {
   const [villages, setVillages] = useState<Village[]>([]);
   const [village, setVillage] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [email, setEmail] = useState("");
 
   const [loadingVillage, setLoadingVillage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -81,13 +81,14 @@ export default function AddFood() {
     formData.append("ingredients", ingredients);
     formData.append("pincode", pincode);
     formData.append("villageName", village); // ✅ MUST MATCH BACKEND
+    // authorEmail no longer used for ownership — server uses authenticated user
 
     if (file) {
       formData.append("image", file); // ✅ FILE, NOT BASE64
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/foods`, {
+      const res = await authFetch(`${API_URL}/api/foods`, {
         method: "POST",
         body: formData,
       });
@@ -193,6 +194,13 @@ export default function AddFood() {
                 value={village}
               />
             )}
+
+              <input
+                className="border p-3 rounded-xl w-full"
+                placeholder="Your email (for edit/delete)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
 
             <input
               type="file"

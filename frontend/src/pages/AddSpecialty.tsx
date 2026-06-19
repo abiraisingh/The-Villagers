@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL;
+import { authFetch, BASE_URL as API_URL } from "@/lib/api";
 
 interface Village {
   id: string;
@@ -30,6 +30,7 @@ export default function AddSpecialty() {
     pincode: "",
     village: "",
   });
+  const [email, setEmail] = useState("");
 
   const [villages, setVillages] = useState<Village[]>([]);
   const [loadingVillages, setLoadingVillages] = useState(false);
@@ -115,7 +116,7 @@ export default function AddSpecialty() {
         villageName: form.village,
       };
 
-      const res = await fetch(`${API_URL}/api/specialties`, {
+      const res = await authFetch(`${API_URL}/api/specialties`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -281,6 +282,10 @@ return (
               >
                 {loading ? "Submitting..." : "Add Specialty"}
               </Button>
+            </div>
+            <div className="mt-3">
+              <label className="block text-sm font-medium mb-2">Your Email (for edit/delete)</label>
+              <input value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-3 rounded-xl" placeholder="you@example.com" />
             </div>
 
           </form>

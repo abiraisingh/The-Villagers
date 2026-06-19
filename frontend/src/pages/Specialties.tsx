@@ -4,6 +4,7 @@ import { Leaf, MapPin, Plus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { authFetch, BASE_URL as API_URL } from "@/lib/api";
 
 interface Specialty {
   id: string;
@@ -13,6 +14,7 @@ interface Specialty {
   village: string;
   pincode: string;
   createdAt: string;
+  createdBy?: string;
   isDemo?: boolean;
 }
 
@@ -24,7 +26,7 @@ const typeColors: Record<string, string> = {
   Beverage: "bg-secondary/10 text-secondary",
 };
 
-const API_URL = import.meta.env.VITE_API_URL;
+
 
 /* ---------------- MOCK DATA ---------------- */
 
@@ -56,6 +58,8 @@ export default function Specialties() {
   const navigate = useNavigate();
 
   const [specialties, setSpecialties] = useState<Specialty[]>(MOCK_SPECIALTIES);
+  const [editingSpecialty, setEditingSpecialty] = useState<any>(null);
+  const [editSpecialtySubmitting, setEditSpecialtySubmitting] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,20 +75,22 @@ export default function Specialties() {
         const data = await res.json();
 
         if (Array.isArray(data)) {
-          setSpecialties((prev) => [
-            ...data.map((item: any) => ({
-              id: item.id,
-              name: item.title, // 👈 map title → name
-              type: item.category, // 👈 map category → type
-              description: item.description,
-              village: item.village,
-              pincode: item.pincode,
-              createdAt: item.createdAt,
-              isDemo: false,
-            })),
-            ...prev,
-          ]);
-        }
+              setSpecialties((prev) => [
+                ...data.map((item: any) => ({
+                  id: item.id,
+                  name: item.title, // 👈 map title → name
+                  type: item.category, // 👈 map category → type
+                  description: item.description,
+                  village: item.village,
+                  pincode: item.pincode,
+                  createdAt: item.createdAt,
+                  isDemo: false,
+                  // attach creator for client-side ownership checks
+                  createdBy: item.createdBy,
+                } as any)),
+                ...prev,
+              ]);
+            }
       } catch (err: any) {
         setError(err.message || "Something went wrong");
       } finally {
@@ -99,7 +105,7 @@ export default function Specialties() {
     <Layout>
       {/* Header */}
       <section className="py-12 border-b border-border">
-        <div className="village-container flex justify-between items-end">
+        <div className="village-container flex justify-between items-end gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm mb-4">
               <Leaf className="w-4 h-4" />
@@ -111,7 +117,8 @@ export default function Specialties() {
             </p>
           </div>
 
-          <Button
+          <div>
+            <Button
             variant="nature"
             size="lg"
             onClick={() => navigate("/specialties/add")}
@@ -119,6 +126,7 @@ export default function Specialties() {
             <Plus className="w-4 h-4" />
             Add Specialty
           </Button>
+          </div>
         </div>
       </section>
 
@@ -132,8 +140,8 @@ export default function Specialties() {
             <p className="text-muted-foreground">No specialties added yet.</p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {specialties.map((item, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {specialties.map((item: any, index) => (
               <article
                 key={item.id}
                 className="group bg-card border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 relative animate-fade-up"
@@ -174,11 +182,41 @@ export default function Specialties() {
                     {item.village}
                   </span>
 
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition" />
+                  <div className="flex items-center gap-3">
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition" />
+                  </div>
                 </div>
               </article>
             ))}
           </div>
+
+          {/* EDIT SPECIALTY MODAL */}
+          {editingSpecialty && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-xl p-6 w-full max-w-lg relative space-y-3">
+                <button onClick={() => setEditingSpecialty(null)} className="absolute top-4 right-4">X</button>
+                <input className="border p-3 rounded w-full" value={editingSpecialty.name} onChange={e => setEditingSpecialty({ ...editingSpecialty, name: e.target.value })} />
+                <textarea className="border p-3 rounded w-full" value={editingSpecialty.description} onChange={e => setEditingSpecialty({ ...editingSpecialty, description: e.target.value })} />
+                <input className="border p-3 rounded w-full" value={editingSpecialty.type} onChange={e => setEditingSpecialty({ ...editingSpecialty, type: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={async () => {
+                    setEditSpecialtySubmitting(true);
+                    try {
+                      const payload = { title: editingSpecialty.name, description: editingSpecialty.description, category: editingSpecialty.type };
+                      const res = await authFetch(`${API_URL}/api/specialties/${editingSpecialty.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                      if (!res.ok) throw new Error();
+                      const updated = await res.json();
+                      setSpecialties(prev => prev.map(s => (s.id === updated.id ? { ...s, name: updated.title, description: updated.description, type: updated.category } : s)));
+                      setEditingSpecialty(null);
+                    } catch {
+                      alert('Failed to update specialty');
+                    } finally { setEditSpecialtySubmitting(false); }
+                  }} disabled={editSpecialtySubmitting}>{editSpecialtySubmitting ? 'Saving...' : 'Save Changes'}</Button>
+                  <Button variant="ghost" onClick={() => setEditingSpecialty(null)}>Cancel</Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </Layout>

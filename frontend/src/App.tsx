@@ -9,9 +9,12 @@ import Photos from "./pages/Photos";
 import Food from "./pages/Food";
 import AddFood from "./pages/AddFood";
 import Specialties from "./pages/Specialties";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import { Header } from "./components/layout/Header";
 import AddSpecialty from "./pages/AddSpecialty";
+import Profile from "./pages/Profile.tsx";
 import VillageDetails from "./pages/VillageDetails";
 import ExploreVillage from "./pages/ExploreVillage";
 import Contact from "./pages/Contact";
@@ -34,7 +37,10 @@ const App = () => (
           <Route path="/food" element={<Food />} />
           <Route path="/food/add" element={<AddFood />} />
           <Route path="/specialties" element={<Specialties />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/specialties/add" element={<AddSpecialty />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/explore" element={<ExploreVillage />} />
           <Route path="/village/:pincode" element={<VillageDetails />} />
 

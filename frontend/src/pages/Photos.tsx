@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { Plus, X, MapPin } from "lucide-react";
+import { authFetch, BASE_URL as API_URL } from "@/lib/api";
+import { Plus, X, MapPin, Heart, Share2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-village.jpg";
 import redfort from "@/assets/red-fort.avif";
@@ -23,6 +25,11 @@ type Photo = {
   imageUrl: string;
   village: string;
   pincode: string;
+  uploadedBy?: string;
+};
+
+type PhotoResponse = Photo & {
+  likesCount?: number;
 };
 
 /* ---------------- DEFAULT ---------------- */
@@ -72,11 +79,21 @@ const DEFAULT_PHOTOS: Photo[] = [
   }
 ];
 
-const API_URL = import.meta.env.VITE_API_URL;
+
 
 export default function Photos() {
   const [photos, setPhotos] = useState<Photo[]>(DEFAULT_PHOTOS);
+  const [liked, setLiked] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem('likedPhotos');
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const [likesCount, setLikesCount] = useState<Record<string, number>>(() => ({}));
+  const [animating, setAnimating] = useState<Record<string, boolean>>(() => ({}));
   const [showForm, setShowForm] = useState(false);
+  const [editingPhoto, setEditingPhoto] = useState<(Photo & { _file?: File }) | null>(null);
+  const [editPhotoSubmitting, setEditPhotoSubmitting] = useState(false);
 
   /* FORM STATE */
   const [title, setTitle] = useState("");
@@ -87,6 +104,8 @@ export default function Photos() {
   const [file, setFile] = useState<File | null>(null);
   const [loadingVillage, setLoadingVillage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  /* ---------------- AUTH STATE ---------------- */
 
   /* ---------------- PINCODE → VILLAGES ---------------- */
   useEffect(() => {
@@ -126,8 +145,12 @@ export default function Photos() {
       const res = await fetch(`${API_URL}/api/photos`);
       if (!res.ok) return;
 
-      const data = await res.json();
+      const data = await res.json() as PhotoResponse[];
       setPhotos(data);
+      // init likes
+      const counts: Record<string, number> = {};
+      data.forEach((p) => counts[p.id] = p.likesCount ?? 0);
+      setLikesCount(counts);
     })();
   }, []);
 
@@ -144,7 +167,7 @@ export default function Photos() {
     fd.append("pincode", pincode);
     fd.append("villageName", village);
 
-    const res = await fetch(`${API_URL}/api/photos`, {
+    const res = await authFetch(`${API_URL}/api/photos`, {
       method: "POST",
       body: fd
     });
@@ -171,8 +194,10 @@ export default function Photos() {
   return (
     <Layout>
       <section className="py-12 border-b">
-        <div className="village-container flex justify-between">
-          <h1 className="font-serif text-3xl">Village Photos</h1>
+        <div className="village-container flex justify-between items-end gap-4">
+          <div>
+            <h1 className="font-serif text-3xl">Village Photos</h1>
+          </div>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4" /> Upload
           </Button>
@@ -183,7 +208,7 @@ export default function Photos() {
       <section className="py-12">
         <div className="village-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {photos.map(photo => (
-            <div key={photo.id} className="rounded-xl overflow-hidden border">
+            <div key={photo.id} className="rounded-xl overflow-hidden border bg-white">
               <img
                 src={photo.imageUrl}
                 alt={photo.title}
@@ -200,6 +225,36 @@ export default function Photos() {
                   <MapPin className="w-4 h-4" />
                   {photo.village} ({photo.pincode})
                 </p>
+
+                <div className="mt-3 flex items-center gap-2 justify-end">
+                  <Button variant={liked[photo.id] ? 'destructive' : 'outline'} size="sm" onClick={async () => {
+                    const token = localStorage.getItem('token');
+                    if (!token) { alert('Log in to like photos'); return; }
+
+                    setAnimating(prev => ({ ...prev, [photo.id]: true }));
+                    setTimeout(() => setAnimating(prev => ({ ...prev, [photo.id]: false })), 450);
+
+                    try {
+                      const res = await authFetch(`${API_URL}/api/photos/${photo.id}/like`, { method: 'POST' });
+                      if (!res.ok) throw new Error();
+                      const data = await res.json();
+                      setLikesCount(prev => ({ ...prev, [photo.id]: data.likesCount }));
+                      setLiked(prev => ({ ...prev, [photo.id]: data.liked }));
+                    } catch { alert('Failed to like'); }
+                  }}>
+                    <Heart className={"w-4 h-4 " + (animating[photo.id] ? 'animate-pulse' : '')} /> {likesCount[photo.id] ? `${likesCount[photo.id]} • ` : ''}{liked[photo.id] ? 'Liked' : 'Like'}
+                  </Button>
+
+                  <Button variant="ghost" size="sm" onClick={async () => {
+                    const text = `${photo.title} — ${photo.description ?? ''}\n\nView on The Villagers.`;
+                    try {
+                      if (navigator.share) await navigator.share({ title: photo.title, text });
+                      else { await navigator.clipboard.writeText(text); toast({ title: 'Copied', description: 'Photo copied to clipboard' }); }
+                    } catch { alert('Unable to share'); }
+                  }}>
+                    <Share2 className="w-4 h-4" /> Share
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -274,6 +329,81 @@ export default function Photos() {
             >
               {submitting ? "Uploading…" : "Upload Photo"}
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PHOTO MODAL */}
+      {editingPhoto && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg relative space-y-3">
+            <button
+              onClick={() => setEditingPhoto(null)}
+              className="absolute top-4 right-4"
+            >
+              <X />
+            </button>
+
+            <input
+              className="border p-3 rounded w-full"
+              placeholder="Title"
+              value={editingPhoto.title}
+              onChange={e => setEditingPhoto({ ...editingPhoto, title: e.target.value })}
+            />
+
+            <textarea
+              className="border p-3 rounded w-full"
+              placeholder="Description"
+              value={editingPhoto.description}
+              onChange={e => setEditingPhoto({ ...editingPhoto, description: e.target.value })}
+            />
+
+            <input
+              className="border p-3 rounded w-full"
+              placeholder="Pincode"
+              value={editingPhoto?.pincode ?? ""}
+              onChange={e => setEditingPhoto(editingPhoto ? { ...editingPhoto, pincode: e.target.value } : null)}
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setEditingPhoto({ ...editingPhoto, _file: e.target.files?.[0] || null })}
+            />
+
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={async () => {
+                  if (!editingPhoto) return;
+                  setEditPhotoSubmitting(true);
+                  try {
+                    const fd = new FormData();
+                    fd.append('title', editingPhoto.title);
+                    if (editingPhoto.description) fd.append('description', editingPhoto.description);
+                    if (editingPhoto.pincode) fd.append('pincode', editingPhoto.pincode);
+                    if (editingPhoto._file) fd.append('photo', editingPhoto._file);
+                    const res = await authFetch(`${API_URL}/api/photos/${editingPhoto.id}`, {
+                      method: 'PUT',
+                      body: fd
+                    });
+                    if (!res.ok) throw new Error();
+                    const updated = await res.json();
+                    setPhotos(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+                    setEditingPhoto(null);
+                  } catch {
+                    alert('Failed to update photo');
+                  } finally {
+                    setEditPhotoSubmitting(false);
+                  }
+                }}
+                disabled={editPhotoSubmitting}
+              >
+                {editPhotoSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+
+              <Button variant="ghost" onClick={() => setEditingPhoto(null)}>Cancel</Button>
+            </div>
           </div>
         </div>
       )}

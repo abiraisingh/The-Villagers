@@ -6,9 +6,13 @@ import {
   UtensilsCrossed,
   Leaf,
   MapPin,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
@@ -20,6 +24,18 @@ const navigation = [
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+  const userAvatar = typeof window !== 'undefined' ? localStorage.getItem('userAvatar') : null;
+  const initials = userEmail
+    ? userEmail
+        .split("@")[0]
+        .split(/[._-]/)
+        .map((s) => s[0]?.toUpperCase())
+        .slice(0, 2)
+        .join("")
+    : "U";
 
   return (
     <>
@@ -42,8 +58,24 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex lg:items-center lg:gap-2">
+            {/* Mobile top-profile button (visible only on small screens) */}
+            {token ? (
+              <div className="md:hidden ml-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link to="/profile" className="inline-flex items-center">
+                      <Avatar className="h-8 w-8">
+                        {userAvatar ? <AvatarImage src={userAvatar} alt={userEmail || 'User avatar'} /> : <AvatarFallback>{initials}</AvatarFallback>}
+                      </Avatar>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>Profile — {userEmail}</TooltipContent>
+                </Tooltip>
+              </div>
+            ) : null}
+
+            {/* Desktop / Tablet Navigation (show from md up) */}
+            <div className="hidden md:flex md:items-center md:gap-2">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
@@ -64,21 +96,43 @@ export function Header() {
               })}
             </div>
 
-            {/* Desktop CTA */}
-            <div className="hidden lg:flex">
+            {/* Desktop / Tablet CTA */}
+            <div className="hidden md:flex items-center">
               <Link to="/stories">
                 <Button variant="hero">
                   <MapPin className="w-4 h-4" />
                   Share Story
                 </Button>
               </Link>
+              {token ? (
+                <div className="flex items-center ml-3 gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link to="/profile" className="inline-flex items-center">
+                        <Avatar className="h-8 w-8">
+                          {userAvatar ? <AvatarImage src={userAvatar} alt={userEmail || 'User avatar'} /> : <AvatarFallback>{initials}</AvatarFallback>}
+                        </Avatar>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>Profile — {userEmail}</TooltipContent>
+                  </Tooltip>
+                  <Button variant="outline" onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('userEmail'); navigate('/'); }}>
+                  Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="ml-3 flex gap-2">
+                  <Link to="/login"><Button variant="ghost">Log in</Button></Link>
+                  <Link to="/register"><Button variant="secondary">Sign up</Button></Link>
+                </div>
+              )}
             </div>
           </div>
         </nav>
       </header>
 
-      {/* 📱 Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border backdrop-blur-md">
+      {/* 📱 Mobile Bottom Navigation (hide on md+) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border backdrop-blur-md">
         <div className="flex justify-around items-center h-16">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;

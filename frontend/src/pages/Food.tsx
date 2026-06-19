@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { authFetch, BASE_URL as API_URL } from "@/lib/api";
 import { Plus, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import rajmachawal from "@/assets/rajmachawal.jpg";
@@ -23,10 +24,10 @@ type Food = {
   imageUrl?: string;
   village: string;
   pincode: string;
+  createdBy?: string;
   isDemo?: boolean;
 };
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 /* ---------------- MOCK DATA ---------------- */
 /* Add your local images inside public/images */
@@ -96,6 +97,8 @@ const MOCK_FOODS: Food[] = [
 export default function FoodPage() {
   const [foods, setFoods] = useState<Food[]>(MOCK_FOODS);
   const [showForm, setShowForm] = useState(false);
+  const [editingFood, setEditingFood] = useState<Food | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   /* FORM STATE */
   const [name, setName] = useState("");
@@ -177,7 +180,7 @@ export default function FoodPage() {
     fd.append("villageName", village);
     if (file) fd.append("image", file);
 
-    const res = await fetch(`${API_URL}/api/foods`, {
+    const res = await authFetch(`${API_URL}/api/foods`, {
       method: "POST",
       body: fd
     });
@@ -209,8 +212,10 @@ export default function FoodPage() {
   return (
     <Layout>
       <section className="py-12 border-b">
-        <div className="village-container flex justify-between">
-          <h1 className="font-serif text-3xl">Village Foods</h1>
+        <div className="village-container flex justify-between items-end gap-4">
+          <div>
+            <h1 className="font-serif text-3xl">Village Foods</h1>
+          </div>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4" /> Add Food
           </Button>
@@ -317,6 +322,83 @@ export default function FoodPage() {
             >
               {submitting ? "Uploading…" : "Add Food"}
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MODAL */}
+      {editingFood && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg relative space-y-3">
+            <button
+              onClick={() => setEditingFood(null)}
+              className="absolute top-4 right-4"
+            >
+              <X />
+            </button>
+
+            <input
+              className="border p-3 rounded w-full"
+              placeholder="Food name"
+              value={editingFood.name}
+              onChange={e => setEditingFood({ ...editingFood, name: e.target.value })}
+            />
+
+            <textarea
+              className="border p-3 rounded w-full"
+              placeholder="Description"
+              value={editingFood.description}
+              onChange={e => setEditingFood({ ...editingFood, description: e.target.value })}
+            />
+
+            <textarea
+              className="border p-3 rounded w-full"
+              placeholder="Ingredients (optional)"
+              value={editingFood.ingredients}
+              onChange={e => setEditingFood({ ...editingFood, ingredients: e.target.value })}
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setEditingFood({ ...editingFood, imageUrl: editingFood.imageUrl, /* file will be handled separately */ })}
+            />
+
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                onClick={async () => {
+                  if (!editingFood) return;
+                  setEditSubmitting(true);
+                  try {
+                    const fd = new FormData();
+                    fd.append('name', editingFood.name);
+                    if (editingFood.description) fd.append('description', editingFood.description);
+                    if (editingFood.ingredients) fd.append('ingredients', editingFood.ingredients);
+                    // Note: file replacement not supported in this quick UI (can be added)
+
+                    const res = await authFetch(`${API_URL}/api/foods/${editingFood.id}`, {
+                      method: 'PUT',
+                      body: fd
+                    });
+
+                    if (!res.ok) throw new Error();
+                    const updated = await res.json();
+                    setFoods(prev => prev.map(f => (f.id === updated.id ? { ...updated, isDemo: false } : f)));
+                    setEditingFood(null);
+                  } catch (err) {
+                    alert('Failed to update food');
+                  } finally {
+                    setEditSubmitting(false);
+                  }
+                }}
+                disabled={editSubmitting}
+              >
+                {editSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+
+              <Button variant="ghost" onClick={() => setEditingFood(null)}>Cancel</Button>
+            </div>
           </div>
         </div>
       )}
